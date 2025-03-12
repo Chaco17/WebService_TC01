@@ -1,7 +1,5 @@
 # WebService_TC01
 
-## Proyecto Estudiantil - Backend con Node.js & PostgreSQL
-
 ### Tech Stack
 - **Backend**
   -  Runtime: Node.js
