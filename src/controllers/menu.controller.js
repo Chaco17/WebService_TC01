@@ -5,20 +5,17 @@ const crearMenu = async (req, res) => {
     const { nombre, id_restaurante } = req.body; // Define los parámetros de la web a una variable
 
     try {
-        // Crea un menú usando los parámetros
         const newMenu = await Menu.create({
             nombre,
             id_restaurante
         });
 
         res.status(201).json({
-            // Mensaje cuando se crea el menú exitosamente
             status: "success",
             message: "Menú creado exitosamente",
             data: newMenu
         });
     } catch (error) {
-        // Mensaje cuando hubo un error
         res.status(500).json({
             status: "error",
             message: "Error al crear el menú",
@@ -28,12 +25,11 @@ const crearMenu = async (req, res) => {
 };
 
 const getMenuId = async (req, res) => {
-    const { id } = req.params; // Define el parámetro como variable id
+    const { id } = req.params;
     try {
-        const menu = await Menu.findByPk(id); // Busca un menú usando su ID
+        const menu = await Menu.findByPk(id); 
         
         if (!menu) {
-            // Mensaje cuando no se encuentra el menú
             return res.status(404).json({
                 status: "error",
                 message: "Menú no encontrado"
@@ -41,13 +37,11 @@ const getMenuId = async (req, res) => {
         }
 
         res.status(200).json({
-            // Mensaje cuando se encuentra el menú exitosamente
             status: "success",
             message: "Menú obtenido exitosamente",
             data: menu
         });
     } catch (error) {
-        // Mensaje cuando hubo un error
         res.status(500).json({
             status: "error",
             message: "Error al obtener el menú",
@@ -57,33 +51,30 @@ const getMenuId = async (req, res) => {
 };
 
 const actualizarMenu = async (req, res) => {
-    const { id } = req.params; // Define el parámetro como variable id
-    const { nombre, id_restaurante } = req.body; // Define los parámetros de la web a una variable
+    const { id } = req.params; 
+    const { nombre, id_restaurante } = req.body; 
 
     try {
-        const menu = await Menu.findByPk(id); // Busca un menú usando su ID
+        const menu = await Menu.findByPk(id); 
         
         if (!menu) {
-            // Mensaje cuando no se encuentra el menú
             return res.status(404).json({
                 status: "error",
                 message: "Menú no encontrado"
             });
         }
 
-        await menu.update({ // Actualiza el menú usando los parámetros
+        await menu.update({ 
             nombre,
             id_restaurante
         });
 
         res.status(200).json({
-            // Mensaje cuando se actualiza el menú exitosamente
             status: "success",
             message: "Menú actualizado exitosamente",
             data: menu
         });
     } catch (error) {
-        // Mensaje cuando hubo un error
         res.status(500).json({
             status: "error",
             message: "Error al actualizar el menú",
@@ -93,28 +84,25 @@ const actualizarMenu = async (req, res) => {
 };
 
 const eliminarMenu = async (req, res) => {
-    const { id } = req.params; // Define el parámetro como variable id
+    const { id } = req.params; 
 
     try {
-        const menu = await Menu.findByPk(id); // Busca un menú usando su ID
+        const menu = await Menu.findByPk(id); 
         
         if (!menu) {
-            // Mensaje cuando no se encuentra el menú
             return res.status(404).json({
                 status: "error",
                 message: "Menú no encontrado"
             });
         }
 
-        await menu.destroy(); // Elimina el menú
+        await menu.destroy();
 
         res.status(200).json({
-            // Mensaje cuando se elimina el menú exitosamente
             status: "success",
             message: "Menú eliminado exitosamente"
         });
     } catch (error) {
-        // Mensaje cuando hubo un error
         res.status(500).json({
             status: "error",
             message: "Error al eliminar el menú",
@@ -124,29 +112,26 @@ const eliminarMenu = async (req, res) => {
 };
 
 const getMenus_RestauranteId = async (req, res) => {
-    const { id } = req.params; // Define el parámetro como variable id
+    const { id } = req.params;
     try {
-        const restaurant = await Restaurante.findByPk(id); // Busca un restaurante usando su ID
+        const restaurant = await Restaurante.findByPk(id); 
         
         if (!restaurant) {
-            // Mensaje cuando no se encuentra el restaurante
             return res.status(404).json({
                 status: "error",
                 message: "Restaurante no encontrado"
             });
         }
 
-        const menus = await Menu.findAll({ // Busca todos los menús del restaurante seleccionado
+        const menus = await Menu.findAll({ 
             where: { id_restaurante: id }
         });
 
         res.status(200).json({
-            // Mensaje cuando se obtienen los menús exitosamente
             status: "success",
             data: menus
         });
     } catch (error) {
-        // Mensaje cuando hubo un error
         res.status(500).json({
             status: "error",
             message: "Error al obtener los menús del restaurante",
