@@ -1,0 +1,13 @@
+version: "3"
+services:
+  db:
+    image: postgres:alpine3.14
+    environment:
+      POSTGRES_DB: restaurante
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin2525
+  app:
+    image: my-node-app
+    port:
+      - "3000:3000"
+  auth: #Servicio de autenticación FALTA
