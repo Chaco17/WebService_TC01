@@ -1,6 +1,5 @@
 const Order = require("../models/order.model");
 
-// 📌 Crear un pedido
 exports.createOrder = async (req, res) => {
   try {
     const { id_cliente, id_restaurante, id_reserva } = req.body;
@@ -21,7 +20,6 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// 📌 Obtener pedido por ID
 exports.getOrderById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -37,7 +35,6 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-// 📌 Obtener pedidos por usuario
 exports.getOrdersByUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -48,7 +45,6 @@ exports.getOrdersByUser = async (req, res) => {
   }
 };
 
-// 📌 Obtener pedidos por restaurante
 exports.getOrdersByRestaurant = async (req, res) => {
   try {
     const { id } = req.params;
@@ -59,7 +55,6 @@ exports.getOrdersByRestaurant = async (req, res) => {
   }
 };
 
-// 📌 Actualizar estado del pedido
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -81,7 +76,6 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-// 📌 Eliminar (cancelar) un pedido
 exports.deleteOrder = async (req, res) => {
   try {
     const { id } = req.params;
