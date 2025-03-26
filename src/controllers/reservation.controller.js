@@ -1,6 +1,5 @@
 const Reservation = require("../models/reservation.model");
 
-// 📌 Crear una nueva reserva
 exports.createReservation = async (req, res) => {
   try {
     const { id_cliente, id_restaurante, fecha, numero_personas } = req.body;
@@ -22,7 +21,6 @@ exports.createReservation = async (req, res) => {
   }
 };
 
-// 📌 Obtener detalles de una reserva por ID
 exports.getReservationById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -38,7 +36,6 @@ exports.getReservationById = async (req, res) => {
   }
 };
 
-// 📌 Cancelar una reserva
 exports.cancelReservation = async (req, res) => {
   try {
     const { id } = req.params;
@@ -48,7 +45,6 @@ exports.cancelReservation = async (req, res) => {
       return res.status(404).json({ message: "Reserva no encontrada." });
     }
 
-    // Cambiar el estado a "cancelada"
     reservation.estado = "cancelada";
     await reservation.save();
 
@@ -58,7 +54,6 @@ exports.cancelReservation = async (req, res) => {
   }
 };
 
-// 📌 Obtener todas las reservas de un usuario
 exports.getReservationsByUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -72,7 +67,6 @@ exports.getReservationsByUser = async (req, res) => {
   }
 };
 
-// 📌 Obtener todas las reservas de un restaurante
 exports.getReservationsByRestaurant = async (req, res) => {
   try {
     const { id } = req.params;
@@ -85,4 +79,3 @@ exports.getReservationsByRestaurant = async (req, res) => {
     res.status(500).json({ message: "Error al obtener reservas del restaurante.", error: error.message });
   }
 };
-
