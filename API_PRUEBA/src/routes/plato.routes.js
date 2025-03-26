@@ -1,9 +1,18 @@
-const express = require('express');
-const router = express.Router();
-const { crearPlato, getPlatoId, actualizarPlato} = require('../controllers/plato.controller');
+import { Router } from 'express';
+import {
+  crearPlato,
+  getPlatoId,
+  actualizarPlato,
+  eliminarPlato,
+  getPlatosByMenu
+} from '../controllers/plato.controller.js';
 
-router.post('/platos', crearPlato);
+const router = Router();
+
+router.post('/menus/:id/platos', crearPlato);
 router.get('/platos/:id', getPlatoId);
 router.put('/platos/:id', actualizarPlato);
+router.delete('/platos/:id', eliminarPlato);
+router.get('/menus/:id/platos', getPlatosByMenu);
 
-module.exports = router;
+export default router;
