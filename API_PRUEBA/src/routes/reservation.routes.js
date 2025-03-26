@@ -1,13 +1,19 @@
-const express = require("express");
-const router = express.Router();
-const reservationController = require("../controllers/reservation.controller");
+import { Router } from 'express';
+import {
+  createReservation,
+  getReservationById,
+  cancelReservation,
+  getReservationsByUser,
+  getReservationsByRestaurant
+} from '../controllers/reservation.controller.js';
 
-// Endpoints de reservas
-router.post("/", reservationController.createReservation);
-router.get("/:id", reservationController.getReservationById);
-router.delete("/:id", reservationController.cancelReservation);
+const router = Router();
 
-router.get("/user/:id", reservationController.getReservationsByUser);
-router.get("/restaurant/:id", reservationController.getReservationsByRestaurant);
+// aquí el orden sí importa para evitar colisiones
+router.post('/reservations', createReservation);
+router.get('/reservations/user/:id', getReservationsByUser);
+router.get('/reservations/restaurant/:id', getReservationsByRestaurant);
+router.get('/reservations/:id', getReservationById);
+router.delete('/reservations/:id', cancelReservation);
 
-module.exports = router;
+export default router;
