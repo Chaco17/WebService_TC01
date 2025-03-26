@@ -2,7 +2,7 @@ import express from 'express';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { PORT } from './config.js';
-import userRoutes from './routes/users.routes.js';
+import userRoutes from './routes/user.routes.js';
 
 dotenv.config();
 
