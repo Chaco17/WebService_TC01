@@ -12,9 +12,8 @@ app.use(express.json());
 app.use("/reservations", reservationRoutes);
 app.use("/orders", orderRoutes);
 
-// Iniciar servidor
 const PORT = process.env.PORT || 3000;
 sequelize.sync().then(() => {
-  console.log("✅ Base de datos sincronizada.");
-  app.listen(PORT, () => console.log(`🚀 Servidor corriendo en el puerto ${PORT}`));
-}).catch(error => console.error("❌ Error al conectar a la base de datos:", error));
+  console.log("Base de datos sincronizada.");
+  app.listen(PORT, () => console.log(`Servidor corriendo en el puerto ${PORT}`));
+}).catch(error => console.error("Error al conectar a la base de datos:", error));
