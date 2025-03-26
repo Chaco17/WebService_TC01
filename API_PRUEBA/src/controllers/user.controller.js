@@ -1,51 +1,87 @@
-import { pool } from '../database/database';
+import pool from '../db.js';
 
+// GET /users
 export const getUsers = async (req, res) => {
-    const { rows } = await pool.query('SELECT * FROM users')
-    res.json( rows );
+  try {
+    const result = await pool.query('SELECT * FROM usuarios');
+    res.status(200).json({ data: result.rows });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener usuarios', error: error.message });
+  }
 };
 
+// GET /users/:id
 export const getUser = async (req, res) => {
-    const {id} = req.params.id; // Extrae el id de la URL
+  const { id } = req.params;
 
-    const {rows} = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+  try {
+    const result = await pool.query('SELECT * FROM usuarios WHERE id = $1', [id]);
 
-    if (rows.length === 0) {
-        return res.status(404).json({message: 'Usuario no encontrado'});
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
-    res.json(rows);
+    res.status(200).json({ data: result.rows[0] });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener usuario', error: error.message });
+  }
 };
 
-export const createUser = async(req, res) => {
-    const data = req.body;
-    console.log(data);
+// POST /users (opcional si no usás auth.register)
+export const createUser = async (req, res) => {
+  const { nombre, correo, tipo_usuario } = req.body;
 
-    const {rows} = await pool.query('INSERT INTO users (name, email) VALUES ($1, $2)', [data.name, data.email]);
-    console.log(rows);
+  if (!nombre || !correo || !tipo_usuario) {
+    return res.status(400).json({ message: 'Todos los campos son requeridos' });
+  }
 
-    res.send('Creando usuario');
+  try {
+    const result = await pool.query(
+      'INSERT INTO usuarios (nombre, correo, tipo_usuario) VALUES ($1, $2, $3) RETURNING *',
+      [nombre, correo, tipo_usuario]
+    );
+
+    res.status(201).json({ message: 'Usuario creado', data: result.rows[0] });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al crear usuario', error: error.message });
+  }
 };
 
-export const deleteUser = async (req, res) => {
-    const {id} = req.params.id; // Extrae el id de la URL
-
-    const {rows} = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
-
-    if (rows.length === 0) {
-        return res.status(404).json({message: 'Usuario no encontrado'});
-    }
-    
-    return res.sendStatus(204).json({message: 'eliminando usuario'});
-};
-
+// PUT /users/:id
 export const updateUser = async (req, res) => {
-    const {id} = req.params.id; // Extrae el id de la URL
-    const data = req.body;
+  const { id } = req.params;
+  const { nombre, correo, tipo_usuario } = req.body;
 
-    const result = await pool.query('UPDATE users SET name = $1, email = $2 WHERE id = $3', [data.name, data.email, id]);
+  try {
+    const check = await pool.query('SELECT * FROM usuarios WHERE id = $1', [id]);
+    if (check.rows.length === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
 
-    console.log(result);
+    const result = await pool.query(
+      'UPDATE usuarios SET nombre = $1, correo = $2, tipo_usuario = $3 WHERE id = $4 RETURNING *',
+      [nombre, correo, tipo_usuario, id]
+    );
 
-    res.send('actualizando usuario');
+    res.status(200).json({ message: 'Usuario actualizado', data: result.rows[0] });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al actualizar usuario', error: error.message });
+  }
+};
+
+// DELETE /users/:id
+export const deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const check = await pool.query('SELECT * FROM usuarios WHERE id = $1', [id]);
+    if (check.rows.length === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    await pool.query('DELETE FROM usuarios WHERE id = $1', [id]);
+    res.status(200).json({ message: 'Usuario eliminado con éxito' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al eliminar usuario', error: error.message });
+  }
 };
