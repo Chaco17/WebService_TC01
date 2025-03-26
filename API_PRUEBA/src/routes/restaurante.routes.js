@@ -1,5 +1,11 @@
-const { Router } = require('express');
-const { getRestaurants, getRestaurantId, crearRestaurante, actualizarRestaurante, eliminarRestaurante } = require('../controllers/restaurante.controller');
+import { Router } from 'express';
+import {
+  getRestaurants,
+  getRestaurantId,
+  crearRestaurante,
+  actualizarRestaurante,
+  eliminarRestaurante
+} from '../controllers/restaurante.controller.js';
 
 const router = Router();
 
@@ -9,4 +15,4 @@ router.post('/restaurants', crearRestaurante);
 router.put('/restaurants/:id', actualizarRestaurante);
 router.delete('/restaurants/:id', eliminarRestaurante);
 
-module.exports = router;
+export default router;
