@@ -31,18 +31,22 @@ app.use(session({
   store: memoryStore
 }));
 
-app.use(keycloak.middleware()); // Protege rutas
+// Inicializa Keycloak - COMENTAR ESTO
+app.use(keycloak.middleware({
+  logout: '/logout',
+  admin: '/'
+}));
 
-// Rutas de negocio
+// Rutas protegidas 
+app.use('/auth', authRoutes); 
+
+// Rutas de negocio (públicas o no protegidas por token directo)
 app.use(userRoutes);
 app.use(menuRoutes);
 app.use(orderRoutes);
 app.use(platoRoutes);
 app.use(reservationRoutes);
 app.use(restauranteRoutes);
-
-// Rutas protegidas 
-app.use('/auth', authRoutes);
 
 // Middleware para manejo de errores
 app.use((err, req, res, next) => {

@@ -14,9 +14,14 @@ const router = Router();
 router.post('/register', register);
 router.post('/login', login);
 
-// Rutas protegidas (requieren token válido)
-router.get('/users/me', keycloak.protect(), getMe);
-router.put('/users/:id', keycloak.protect(), updateUser);
-router.delete('/users/:id', keycloak.protect(), deleteUser);
+// Rutas sin protección temporalmente
+// router.get('/users/me', getMe);
+// router.put('/users/:id', updateUser);
+// router.delete('/users/:id', deleteUser);
+
+// Rutas protegidas (requieren token Bearer válido) - COMENTAR ESTO
+router.get('/users/me', keycloak.protect('realm:cliente'), getMe);
+router.put('/users/:id', keycloak.protect('realm:cliente'), updateUser);
+router.delete('/users/:id', keycloak.protect('realm:cliente'), deleteUser);
 
 export default router;
