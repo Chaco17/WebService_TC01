@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { keycloak } from '../keycloak-config.js';
+import { keycloak } from '../middlewares/keycloak-config.js';
 import {
   register,
   login,
@@ -11,8 +11,8 @@ import {
 const router = Router();
 
 // Rutas públicas
-router.post('/auth/register', register);
-router.post('/auth/login', login);
+router.post('/register', register);
+router.post('/login', login);
 
 // Rutas protegidas (requieren token válido)
 router.get('/users/me', keycloak.protect(), getMe);

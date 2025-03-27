@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import session from 'express-session';
 
 import { PORT } from './config.js';
-import { keycloak, memoryStore } from './keycloak-config.js';
+import { keycloak, memoryStore } from './middlewares/keycloak-config.js';
 
 // Rutas
 import userRoutes from './routes/user.routes.js';
@@ -42,7 +42,7 @@ app.use(reservationRoutes);
 app.use(restauranteRoutes);
 
 // Rutas protegidas 
-app.use(authRoutes);
+app.use('/auth', authRoutes);
 
 // Middleware para manejo de errores
 app.use((err, req, res, next) => {
