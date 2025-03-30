@@ -1,0 +1,68 @@
+version: "3.8"
+
+volumes:
+  pgdata:
+
+networks:
+  restaurant_net:
+    driver: bridge
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: restaurante
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin2525
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - restaurant_net
+
+  auth:
+    image: quay.io/keycloak/keycloak:24.0.1
+    restart: always
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: start-dev --import-realm
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - restaurant_net
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - auth
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=db
+      - DB_USER=postgres
+      - DB_PASSWORD=admin2525
+      - DB_DATABASE=restaurante
+      - DB_PORT=5432
+      - PORT=3000
+      - KEYCLOAK_HOST=auth  # Esto es clave para que verifyToken funcione
+    networks:
+      - restaurant_net
+
+  postman:
+    image: kasmweb/postman:1.14.0
+    restart: always
+    ports:
+      - "6901:6901"
+    environment:
+      - VNC_PW=postman
+    networks:
+      - restaurant_net
