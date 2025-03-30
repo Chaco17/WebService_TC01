@@ -53,7 +53,7 @@ services:
       - DB_DATABASE=restaurante
       - DB_PORT=5432
       - PORT=3000
-      - KEYCLOAK_HOST=auth  # Esto es clave para que verifyToken funcione
+      - KEYCLOAK_HOST=auth 
     networks:
       - restaurant_net
 
