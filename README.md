@@ -3,7 +3,7 @@
 ## Proyecto - Trabajo Corto 1 - Base de Datos II  
 **Autores:** Sebastián Chacón y Pablo Agüero  
 **Profesor:** Kenneth Obando  
-**Fecha de entrega:** 26 de marzo, 2025
+**Fecha de entrega:** 28 de marzo, 2025
 
 ---
 
