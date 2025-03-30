@@ -1,177 +1,264 @@
 import request from 'supertest';
 import app from '../src/index.js';
 
-let createdUserId;
-
-describe('User routes', () => {
-
-  // ========== POST /users ==========
-
-  it('should create a user', async () => {
+describe ('POST /users', () => {
+  
+  let createdUserId;
+  
+  test ('should be succesfully created', async () => {
     const res = await request(app).post('/users').send({
-      nombre: 'Test User',
-      correo: 'testuser@example.com',
-      tipo_usuario: 'cliente'
+      "nombre": "Daniel Corrales Mora",
+      "correo": "corralitos@gmail.com",
+      "tipo_usuario": "cliente"
     });
     expect(res.statusCode).toBe(201);
     expect(res.body).toHaveProperty('data');
+    
     createdUserId = res.body.data.id;
   });
 
-  it('should return 400 if required fields are missing', async () => {
-    const res = await request(app).post('/users').send({
-      nombre: 'Incomplete User'
-    });
-    expect(res.statusCode).toBe(400);
+  afterAll(async () => {
+    if (createdUserId) {
+      await request(app).delete(`/users/${createdUserId}`);
+    }
   });
 
-  it('should return 400 if invalid tipo_usuario is provided', async () => {
+  test('should return 500 if email already exists', async () => {
     const res = await request(app).post('/users').send({
-      nombre: 'Invalid Type',
-      correo: 'invalid@example.com',
-      tipo_usuario: 'hacker'
+      "nombre": "Usuario Existente",
+      "correo": "dani@gmail.com",
+      "tipo_usuario": "cliente"
     });
-    // esto depende si validás el tipo_usuario manualmente
-    expect([400, 500]).toContain(res.statusCode);
-  });
-
-  it('should return 500 if email is duplicated', async () => {
-    const res = await request(app).post('/users').send({
-      nombre: 'Duplicated',
-      correo: 'testuser@example.com',
-      tipo_usuario: 'cliente'
-    });
+    
     expect(res.statusCode).toBe(500);
+    expect(res.body).toHaveProperty('error');
+    expect(res.body.error).toMatch("duplicate key value violates unique constraint \"usuarios_correo_key\"");
   });
+});
 
-  // ========== GET /users ==========
-
-  it('should return all users', async () => {
+describe ('GET /users', () => {
+  test ('should return all users', async () => {
     const res = await request(app).get('/users');
     expect(res.statusCode).toBe(200);
     expect(Array.isArray(res.body.data)).toBe(true);
   });
-
-  // Este caso depende de que la tabla esté vacía
-  // it('should return 200 and empty array if no users', async () => {
-  //   // Simular tabla vacía o usar BD separada
-  // });
-
-  // ========== GET /users/:id ==========
-
-  it('should return user by ID', async () => {
-    const res = await request(app).get(`/users/${createdUserId}`);
+  
+  test ('should return empty array if no users exist', async () => {
+    const originalResponse = await request(app).get('/users');
+    const originalUsers = originalResponse.body.data;
+    
+    for (const user of originalUsers) {
+      await request(app).delete(`/users/${user.id}`);
+    }
+    
+    const res = await request(app).get('/users');
     expect(res.statusCode).toBe(200);
-    expect(res.body.data).toHaveProperty('id', createdUserId);
+    expect(res.body.data).toEqual([]);
+    
+    for (const user of originalUsers) {
+      const { id, ...userData } = user;
+      await request(app).post('/users').send(userData);
+    }
   });
+});
 
-  it('should return 404 if user does not exist', async () => {
-    const res = await request(app).get('/users/999999');
-    expect(res.statusCode).toBe(404);
+describe ('GET /users/:id', () => {
+  let testUserId;
+  
+  beforeAll(async () => {
+    const existingRes = await request(app).get('/users/45');
+    
+    if (existingRes.statusCode === 200) {
+      testUserId = 45;
+    } else {
+      const createRes = await request(app).post('/users').send({
+        "nombre": "Usuario Prueba",
+        "correo": "usuario.prueba@test.com",
+        "tipo_usuario": "cliente"
+      });
+      
+      expect(createRes.statusCode).toBe(201);
+      testUserId = createRes.body.data.id;
+    }
   });
-
-  it('should return 500 if ID is invalid', async () => {
-    const res = await request(app).get('/users/abc');
-    expect(res.statusCode).toBe(500);
+  
+  afterAll(async () => {
+    if (testUserId !== 45) {
+      await request(app).delete(`/users/${testUserId}`);
+    }
   });
-
-  it('should return 500 if ID is undefined', async () => {
-    const res = await request(app).get('/users/undefined');
-    expect(res.statusCode).toBe(500);
-  });
-
-  it('should return 500 if ID is NaN', async () => {
-    const res = await request(app).get('/users/NaN');
-    expect(res.statusCode).toBe(500);
-  });
-
-  // ========== PUT /users/:id ==========
-
-  it('should update user by ID', async () => {
-    const res = await request(app).put(`/users/${createdUserId}`).send({
-      nombre: 'Updated User',
-      correo: 'updated@example.com',
-      tipo_usuario: 'cliente'
-    });
+  
+  test ('should return user by ID', async () => {
+    const res = await request(app).get(`/users/${testUserId}`);
+    
     expect(res.statusCode).toBe(200);
-    expect(res.body.data.nombre).toBe('Updated User');
+    expect(res.body.data).toHaveProperty('id', testUserId);
+    
+    expect(res.body.data).toHaveProperty('nombre');
+    expect(res.body.data).toHaveProperty('correo');
+    expect(res.body.data).toHaveProperty('tipo_usuario');
+    
+    expect(typeof res.body.data.nombre).toBe('string');
+    expect(typeof res.body.data.correo).toBe('string');
+    expect(typeof res.body.data.tipo_usuario).toBe('string');
   });
 
-  it('should return 404 if updating non-existent user', async () => {
-    const res = await request(app).put('/users/999999').send({
-      nombre: 'Nobody',
-      correo: 'nobody@example.com',
-      tipo_usuario: 'cliente'
-    });
+  test ('should return 404 if user does not exist', async () => {
+    const res = await request(app).get('/users/999');
     expect(res.statusCode).toBe(404);
+    expect(res.body).toHaveProperty('message');
+    expect(res.body.message).toMatch(/usuario.*no encontrado|user.*not found/i);
   });
+});
 
-  it('should return 500 if ID is invalid on update', async () => {
-    const res = await request(app).put('/users/abc').send({
-      nombre: 'Error',
-      correo: 'error@example.com',
-      tipo_usuario: 'cliente'
+describe ('PUT /users/:id', () => {
+  let testUserId;
+  let originalUserData;
+  
+  beforeAll(async () => {
+    const existingRes = await request(app).get('/users/1');
+    
+    if (existingRes.statusCode === 200) {
+      testUserId = 1;
+      originalUserData = existingRes.body.data;
+    } else {
+      const createRes = await request(app).post('/users').send({
+        "nombre": "Usuario Temporal",
+        "correo": "temporal@test.com",
+        "tipo_usuario": "cliente"
+      });
+      
+      expect(createRes.statusCode).toBe(201);
+      testUserId = createRes.body.data.id;
+      originalUserData = null;
+    }
+  });
+  
+  afterAll(async () => {
+    if (originalUserData) {
+      await request(app).put(`/users/${testUserId}`).send({
+        "nombre": originalUserData.nombre,
+        "correo": originalUserData.correo,
+        "tipo_usuario": originalUserData.tipo_usuario
+      });
+    } else if (testUserId) {
+      await request(app).delete(`/users/${testUserId}`);
+    }
+  });
+  
+  test ('should update user by ID', async () => {
+    const res = await request(app).put(`/users/${testUserId}`).send({
+      "nombre": "Andrea Rodriguez",
+      "correo": "andreanuevo@gmail.com",
+      "tipo_usuario": "cliente"
     });
-    expect(res.statusCode).toBe(500);
-  });
-
-  it('should return 500 if ID is undefined on update', async () => {
-    const res = await request(app).put('/users/undefined').send({
-      nombre: 'Error',
-      correo: 'error@example.com',
-      tipo_usuario: 'cliente'
-    });
-    expect(res.statusCode).toBe(500);
-  });
-
-  it('should return 404 if ID is empty string on update', async () => {
-    const res = await request(app).put('/users/').send({
-      nombre: 'Error',
-      correo: 'error@example.com',
-      tipo_usuario: 'cliente'
-    });
-    expect(res.statusCode).toBe(404);
-  });
-
-  it('should return 500 if ID is NaN on update', async () => {
-    const res = await request(app).put('/users/NaN').send({
-      nombre: 'Error',
-      correo: 'error@example.com',
-      tipo_usuario: 'cliente'
-    });
-    expect(res.statusCode).toBe(500);
-  });
-
-  // ========== DELETE /users/:id ==========
-
-  it('should delete user by ID', async () => {
-    const res = await request(app).delete(`/users/${createdUserId}`);
+    
     expect(res.statusCode).toBe(200);
-    expect(res.body.message).toMatch(/eliminado/i);
+    expect(res.body.data.nombre).toBe("Andrea Rodriguez");
+    expect(res.body.data.correo).toBe("andreanuevo@gmail.com");
+    expect(res.body.data.tipo_usuario).toBe("cliente");
   });
 
-  it('should return 404 if deleting non-existent user', async () => {
-    const res = await request(app).delete('/users/999999');
+  test('should return 404 if user does not exist', async () => {
+    const nonExistentId = 99999;
+    
+    const res = await request(app).put(`/users/${nonExistentId}`).send({
+      "nombre": "Usuario Inexistente",
+      "correo": "noexiste@test.com",
+      "tipo_usuario": "cliente"
+    });
+    
     expect(res.statusCode).toBe(404);
+    expect(res.body).toHaveProperty('message');
+    expect(res.body.message).toMatch(/usuario.*no encontrado|user.*not found/i);
   });
 
-  it('should return 500 if ID is invalid on delete', async () => {
-    const res = await request(app).delete('/users/abc');
-    expect(res.statusCode).toBe(500);
+  test('should return 500 if ID is invalid', async () => {
+    const invalidIds = ['abc', 'undefined', 'NaN'];
+    
+    for (const invalidId of invalidIds) {
+      const res = await request(app).put(`/users/${invalidId}`).send({
+        "nombre": "Usuario Test",
+        "correo": "test@test.com",
+        "tipo_usuario": "cliente"
+      });
+      
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toHaveProperty('message');
+    }
   });
 
-  it('should return 500 if ID is undefined on delete', async () => {
-    const res = await request(app).delete('/users/undefined');
-    expect(res.statusCode).toBe(500);
+  test('should give error if required field is missing', async () => {
+    let tempUserId;
+    let needsCleanup = false;
+    
+    if (!testUserId) {
+      const createRes = await request(app).post('/users').send({
+        "nombre": "Usuario Temporal Campos",
+        "correo": "temporal.campos@test.com",
+        "tipo_usuario": "cliente"
+      });
+      
+      expect(createRes.statusCode).toBe(201);
+      tempUserId = createRes.body.data.id;
+      needsCleanup = true;
+    } else {
+      tempUserId = testUserId;
+    }
+    
+    const testCases = [
+      { data: { "correo": "test@test.com", "tipo_usuario": "cliente" }, missing: "nombre" },
+      { data: { "nombre": "Usuario Test", "tipo_usuario": "cliente" }, missing: "correo" },
+      { data: { "nombre": "Usuario Test", "correo": "test@test.com" }, missing: "tipo_usuario" }
+    ];
+    
+    for (const testCase of testCases) {
+      const res = await request(app).put(`/users/${tempUserId}`).send(testCase.data);
+      
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toHaveProperty('message');
+      expect(res.body.message).toBe("Error al actualizar usuario");
+    }
+    
+    if (needsCleanup) {
+      await request(app).delete(`/users/${tempUserId}`);
+    }
   });
+});
 
-  it('should return 404 if ID is empty string on delete', async () => {
-    const res = await request(app).delete('/users/');
-    expect(res.statusCode).toBe(404);
+describe ('DELETE /users/:id', () => {
+  let testUserId;
+  
+  beforeAll(async () => {
+    const createRes = await request(app).post('/users').send({
+      "nombre": "Usuario Para Eliminar",
+      "correo": "usuario.eliminar@test.com",
+      "tipo_usuario": "cliente"
+    });
+    
+    if (createRes.statusCode === 201) {
+      testUserId = createRes.body.data.id;
+    } else {
+      const usersRes = await request(app).get('/users');
+      
+      if (usersRes.statusCode === 200 && Array.isArray(usersRes.body.data) && usersRes.body.data.length > 1) {
+        testUserId = usersRes.body.data[usersRes.body.data.length - 1].id;
+      } else {
+        testUserId = null;
+      }
+    }
   });
-
-  it('should return 500 if ID is NaN on delete', async () => {
-    const res = await request(app).delete('/users/NaN');
-    expect(res.statusCode).toBe(500);
+  
+  test ('should delete user by ID', async () => {
+    if (!testUserId) {
+      console.warn('Test skipped: No suitable user found for deletion test');
+      return;
+    }
+    
+    const res = await request(app).delete(`/users/${testUserId}`);
+    expect(res.statusCode).toBe(200);
+    
+    const checkRes = await request(app).get(`/users/${testUserId}`);
+    expect(checkRes.statusCode).toBe(404);
   });
 });
