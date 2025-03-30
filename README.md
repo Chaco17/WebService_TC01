@@ -74,3 +74,9 @@ Algunas pruebas no se ejecutaron correctamente debido a restricciones con la val
 - `Contraseña: postman`
 
 3. Probar endpoints REST usando tokens JWT si se desactiva el issuer o simplemente comentar la validación del token para hacer pruebas funcionales.
+
+---
+
+## Link del video
+
+- https://youtu.be/tp7VEFcRYfs

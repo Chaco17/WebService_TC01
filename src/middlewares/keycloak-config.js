@@ -22,4 +22,4 @@ const keycloak = new Keycloak(
   keycloakConfig
 );
 
-export { keycloak, memoryStore, devMiddleware };
+export { keycloak, memoryStore };
