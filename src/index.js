@@ -1,21 +1,21 @@
 import express from 'express';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import session from 'express-session';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUI from 'swagger-ui-express';
 
 import { PORT } from './config.js';
-import { keycloak, memoryStore } from './middlewares/keycloak-config.js';
 
-// Rutas
+// Rutas de negocio
 import userRoutes from './routes/user.routes.js';
 import menuRoutes from './routes/menu.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import platoRoutes from './routes/plato.routes.js';
 import reservationRoutes from './routes/reservation.routes.js';
 import restauranteRoutes from './routes/restaurante.routes.js';
-import authRoutes from './routes/auth.routes.js'; 
+
+// ⚠️ Autenticación desactivada temporalmente
+// import authRoutes from './routes/auth.routes.js';
 
 dotenv.config();
 
@@ -32,7 +32,7 @@ const swaggerSpec = {
     },
     servers: [
       {
-        url: "http://localhost:8080"
+        url: "http://localhost:3000" // Corregido para coincidir con el puerto real
       }
     ]
   },
@@ -43,22 +43,22 @@ const swaggerSpec = {
 app.use(morgan('dev'));
 app.use(express.json());
 
-// Middleware de sesión y Keycloak
-app.use(session({
-  secret: 'clave',
-  resave: false,
-  saveUninitialized: true,
-  store: memoryStore
-}));
+// ⚠️ Sesión y Keycloak desactivados
+// import session from 'express-session';
+// import { keycloak, memoryStore } from './middlewares/keycloak-config.js';
+// app.use(session({
+//   secret: 'clave',
+//   resave: false,
+//   saveUninitialized: true,
+//   store: memoryStore
+// }));
+// app.use(keycloak.middleware({
+//   logout: '/logout',
+//   admin: '/'
+// }));
 
-// Inicializa Keycloak - COMENTAR ESTO
-//app.use(keycloak.middleware({
-//  logout: '/logout',
-//  admin: '/'
-//}));
-
-// Rutas protegidas 
-app.use('/auth', authRoutes); 
+// ⚠️ Rutas protegidas desactivadas temporalmente
+// app.use('/auth', authRoutes); 
 
 // Rutas de negocio
 app.use(userRoutes);
@@ -68,22 +68,21 @@ app.use(platoRoutes);
 app.use(reservationRoutes);
 app.use(restauranteRoutes);
 
-//Ruta de documentación
+// Ruta de documentación
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerJSDoc(swaggerSpec)));
 
 // Middleware para manejo de errores
 app.use((err, req, res, next) => {
   console.error("Error:", err.stack);
-  console.error("Error completo:", err); //
+  console.error("Error completo:", err);
   res.status(500).json({ error: "Error interno del servidor" });
 });
 
 export default app;
 
 // inicia
-
 if (process.env.NODE_ENV !== 'test') {
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+  app.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  });
 }
