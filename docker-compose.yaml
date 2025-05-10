@@ -40,3 +40,11 @@ services:
       - PORT=3000 
     networks:
       - restaurant_net
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - restaurant_net
