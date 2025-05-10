@@ -6,6 +6,8 @@ import {
   updateUser,
   deleteUser
 } from '../controllers/user.controller.js';
+import { getReservationsByUser } from '../controllers/user.controller.js';
+import { getReservationsByRestaurant } from '../controllers/restaurante.controller.js';
 
 const router = Router();
 
@@ -142,5 +144,7 @@ router.put('/users/:id', updateUser);
  *        description: Usuario no encontrado
  */
 router.delete('/users/:id', deleteUser);
+router.get('/users/:id/reservations', getReservationsByUser); //Nuevo, se tiene que documentar
+router.get('/restaurants/:id/reservations', getReservationsByRestaurant);
 
 export default router;
