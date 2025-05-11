@@ -82,6 +82,7 @@ export default app;
 
 // inicia
 if (process.env.NODE_ENV !== 'test') {
+  console.log("Instancia activa en puerto:", PORT); // temporal, logs de control
   app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
   });
