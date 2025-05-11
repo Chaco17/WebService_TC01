@@ -1,4 +1,5 @@
 import pool from '../db.js';
+import redisClient from '../redis.js';
 
 // POST /menus
 export const crearMenu = async (req, res) => {
@@ -27,23 +28,43 @@ export const crearMenu = async (req, res) => {
 // GET /menus/:id
 export const getMenuId = async (req, res) => {
   const { id } = req.params;
+  const cacheKey = `menu:${id}`;
 
   try {
+    // 1. Buscar en caché
+    const cachedMenu = await redisClient.get(cacheKey);
+
+    if (cachedMenu) {
+      return res.status(200).json({
+        status: "success",
+        message: "Menú obtenido desde caché",
+        data: JSON.parse(cachedMenu)
+      });
+    }
+
+    // 2. Consultar PostgreSQL si no está en caché
     const result = await pool.query('SELECT * FROM menus WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ status: "error", message: "Menú no encontrado" });
     }
 
-    res.status(200).json({
+    const menu = result.rows[0];
+
+    // 3. Guardar en caché con expiración de 2 minutos
+    await redisClient.setEx(cacheKey, 120, JSON.stringify(menu));
+
+    return res.status(200).json({
       status: "success",
-      message: "Menú obtenido exitosamente",
-      data: result.rows[0]
+      message: "Menú obtenido desde la base de datos",
+      data: menu
     });
+
   } catch (error) {
     res.status(500).json({ status: "error", message: "Error al obtener el menú", error: error.message });
   }
 };
+
 
 // PUT /menus/:id
 export const actualizarMenu = async (req, res) => {
@@ -95,20 +116,41 @@ export const eliminarMenu = async (req, res) => {
 // GET /restaurants/:id/menus
 export const getMenus_RestauranteId = async (req, res) => {
   const { id } = req.params;
+  const cacheKey = `menus_restaurante:${id}`;
 
   try {
+    // 1. Revisar caché
+    const cachedMenus = await redisClient.get(cacheKey);
+    if (cachedMenus) {
+      return res.status(200).json({
+        status: "success",
+        message: "Menús obtenidos desde caché",
+        data: JSON.parse(cachedMenus)
+      });
+    }
+
+    // 2. Verificar restaurante existe
     const check = await pool.query('SELECT * FROM restaurantes WHERE id = $1', [id]);
     if (check.rows.length === 0) {
       return res.status(404).json({ status: "error", message: "Restaurante no encontrado" });
     }
 
+    // 3. Obtener menús de base de datos
     const result = await pool.query('SELECT * FROM menus WHERE id_restaurante = $1', [id]);
+
+    // 4. Guardar en caché por 2 minutos
+    await redisClient.setEx(cacheKey, 120, JSON.stringify(result.rows));
 
     res.status(200).json({
       status: "success",
+      message: "Menús obtenidos desde base de datos",
       data: result.rows
     });
   } catch (error) {
-    res.status(500).json({ status: "error", message: "Error al obtener los menús", error: error.message });
+    res.status(500).json({
+      status: "error",
+      message: "Error al obtener los menús",
+      error: error.message
+    });
   }
 };

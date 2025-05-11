@@ -1,4 +1,5 @@
 import pool from '../db.js';
+import redisClient from '../redis.js';
 
 // POST /menus/:id/platos
 export const crearPlato = async (req, res) => {
@@ -39,8 +40,20 @@ export const crearPlato = async (req, res) => {
 // GET /platos/:id
 export const getPlatoId = async (req, res) => {
   const { id } = req.params;
+  const cacheKey = `plato:${id}`;
 
   try {
+    // 1. Buscar en caché
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return res.status(200).json({
+        status: "success",
+        message: "Plato obtenido desde caché",
+        data: JSON.parse(cached)
+      });
+    }
+
+    // 2. Consultar base de datos
     const result = await pool.query('SELECT * FROM platos WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
@@ -50,8 +63,12 @@ export const getPlatoId = async (req, res) => {
       });
     }
 
+    // 3. Guardar en caché por 5 minutos
+    await redisClient.setEx(cacheKey, 300, JSON.stringify(result.rows[0]));
+
     res.status(200).json({
       status: "success",
+      message: "Plato obtenido desde base de datos",
       data: result.rows[0]
     });
   } catch (error) {
@@ -62,6 +79,7 @@ export const getPlatoId = async (req, res) => {
     });
   }
 };
+
 
 // PUT /platos/:id
 export const actualizarPlato = async (req, res) => {
@@ -127,8 +145,20 @@ export const eliminarPlato = async (req, res) => {
 // GET /menus/:id/platos
 export const getPlatosByMenu = async (req, res) => {
   const { id } = req.params;
+  const cacheKey = `platos_menu:${id}`;
 
   try {
+    // 1. Revisar caché
+    const cachedPlatos = await redisClient.get(cacheKey);
+    if (cachedPlatos) {
+      return res.status(200).json({
+        status: "success",
+        message: "Platos obtenidos desde caché",
+        data: JSON.parse(cachedPlatos)
+      });
+    }
+
+    // 2. Validar menú
     const menuCheck = await pool.query('SELECT * FROM menus WHERE id = $1', [id]);
     if (menuCheck.rows.length === 0) {
       return res.status(404).json({
@@ -137,13 +167,15 @@ export const getPlatosByMenu = async (req, res) => {
       });
     }
 
-    const result = await pool.query(
-      'SELECT * FROM platos WHERE id_menu = $1',
-      [id]
-    );
+    // 3. Obtener platos de la base de datos
+    const result = await pool.query('SELECT * FROM platos WHERE id_menu = $1', [id]);
+
+    // 4. Guardar en caché por 2 minutos
+    await redisClient.setEx(cacheKey, 120, JSON.stringify(result.rows));
 
     res.status(200).json({
       status: "success",
+      message: "Platos obtenidos desde base de datos",
       data: result.rows
     });
   } catch (error) {
@@ -154,3 +186,4 @@ export const getPlatosByMenu = async (req, res) => {
     });
   }
 };
+
