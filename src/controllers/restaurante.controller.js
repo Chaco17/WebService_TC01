@@ -1,5 +1,6 @@
 import pool from '../db.js';
-import redisClient from '../redis.js';
+import redisClient from '../config/redis.js';
+
 
 // GET /restaurants
 export const getRestaurants = async (req, res) => {
@@ -172,6 +173,27 @@ export const eliminarRestaurante = async (req, res) => {
     res.status(500).json({
       status: "error",
       message: "Error al eliminar el restaurante",
+      error: error.message
+    });
+  }
+};
+
+export const getReservationsByRestaurant = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM reservas WHERE id_restaurante = $1',
+      [id]
+    );
+
+    res.status(200).json({
+      message: 'Reservas del restaurante obtenidas exitosamente',
+      data: result.rows
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error al obtener reservas del restaurante',
       error: error.message
     });
   }

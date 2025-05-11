@@ -1,5 +1,5 @@
 import pool from '../db.js';
-import redisClient from '../redis.js';
+import redisClient from '../config/redis.js';
 
 // POST /menus/:id/platos
 export const crearPlato = async (req, res) => {

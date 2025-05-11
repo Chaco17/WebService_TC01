@@ -1,5 +1,6 @@
 import pool from '../db.js';
-import redisClient from '../redis.js';
+import redisClient from '../config/redis.js';
+
 
 // POST /menus
 export const crearMenu = async (req, res) => {
