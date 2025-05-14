@@ -13,11 +13,12 @@ import orderRoutes from './routes/order.routes.js';
 import platoRoutes from './routes/plato.routes.js';
 import reservationRoutes from './routes/reservation.routes.js';
 import restauranteRoutes from './routes/restaurante.routes.js';
+import searchRoutes from './routes/searchRoutes.js';
 
 // ⚠️ Autenticación desactivada temporalmente
 // import authRoutes from './routes/auth.routes.js';
 
-dotenv.config();
+dotenv.config(); // Cargar variables de entorno desde el archivo .env
 
 const app = express();
 
@@ -67,6 +68,7 @@ app.use(orderRoutes);
 app.use(platoRoutes);
 app.use(reservationRoutes);
 app.use(restauranteRoutes);
+app.use('/search', searchRoutes);
 
 // Ruta de documentación
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerJSDoc(swaggerSpec)));
