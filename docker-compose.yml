@@ -5,6 +5,12 @@ volumes:
   es-data-es01:
   es-data-es02:
   es-data-es03:
+  mongodata1:
+  mongodata2:
+  mongodata3:
+  config1:
+  config2:
+  config3:
 
 networks:
   restaurant_net:
@@ -202,3 +208,116 @@ services:
 #        retries: 5
 #      networks:
 #        - restaurant_net
+
+
+#-----MONGODB------
+
+# ReplicaSet de shard
+  mongors1:
+    container_name: mongors1
+    image: mongo
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27017
+    ports:
+      - 27017:27017
+    expose:
+      - "27017"
+    environment:
+      TERM: xterm
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mongodata1:/data/db
+
+  mongors2:
+    container_name: mongors2
+    image: mongo
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27017
+    ports:
+      - 27027:27017
+    expose:
+      - "27017"
+    environment:
+      TERM: xterm
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mongodata2:/data/db
+
+  mongors3:
+    container_name: mongors3
+    image: mongo
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27017
+    ports:
+      - 27037:27017
+    expose:
+      - "27017"
+    environment:
+      TERM: xterm
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mongodata3:/data/db
+
+# ReplicaSet de configuracion
+  mongocfg1:
+    container_name: mongocfg1
+    image: mongo
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 27017
+    environment:
+      TERM: xterm
+    expose:
+      - "27017"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - config1:/data/db
+
+  mongocfg2:
+    container_name: mongocfg2
+    image: mongo
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 27017
+    environment:
+      TERM: xterm
+    expose:
+      - "27017"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - config2:/data/db
+
+  mongocfg3:
+    container_name: mongocfg3
+    image: mongo
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 27017
+    environment:
+      TERM: xterm
+    expose:
+      - "27017"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - config3:/data/db
+
+# Router del replicaset(donde debo montar mi shard)
+  mongos:
+    container_name: mongos
+    image: mongo
+    depends_on:
+      - mongocfg1
+      - mongocfg2
+      - mongocfg3
+    command: mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017 --port 27017
+    ports:
+      - 27019:27017
+    expose:
+      - "27017"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    
+  mongo-express:
+    container_name: mongo-express
+    image: mongo-express:latest
+    restart: always
+    depends_on: 
+      - mongors2
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongors2
+      - ME_CONFIG_MONGODB_PORT=27027
+    ports:
+      - "8081:8081"
+    networks:
+      - restaurant_net
