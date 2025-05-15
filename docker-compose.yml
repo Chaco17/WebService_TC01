@@ -189,6 +189,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - mongodata1:/data/db
+    networks:
+      - restaurant_net
 
   mongors2:
     container_name: mongors2
@@ -203,6 +205,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - mongodata2:/data/db
+    networks:
+      - restaurant_net
 
   mongors3:
     container_name: mongors3
@@ -217,6 +221,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - mongodata3:/data/db
+    networks:
+      - restaurant_net
 
 # ReplicaSet de configuracion
   mongocfg1:
@@ -230,6 +236,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - config1:/data/db
+    networks:
+      - restaurant_net
 
   mongocfg2:
     container_name: mongocfg2
@@ -242,6 +250,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - config2:/data/db
+    networks:
+      - restaurant_net
 
   mongocfg3:
     container_name: mongocfg3
@@ -254,6 +264,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - config3:/data/db
+    networks:
+      - restaurant_net
 
 # Router del replicaset(donde debo montar mi shard)
   mongos:
@@ -263,13 +275,15 @@ services:
       - mongocfg1
       - mongocfg2
       - mongocfg3 #****
-    command: mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017 --port 27017
+    command: mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017 --port 27017 --bind_ip_all
     ports:
       - 27019:27017
     expose:
       - "27017"
     volumes:
       - /etc/localtime:/etc/localtime:ro
+    networks:
+      - restaurant_net
     
   mongo-express:
     container_name: mongo-express
@@ -278,8 +292,8 @@ services:
     depends_on: 
       - mongos
     environment:
-    #  - ME_CONFIG_MONGODB_SERVER=mongors2
-      - ME_CONFIG_MONGODB_PORT=27017 #Puerto expuesto
+     - ME_CONFIG_MONGODB_SERVER=mongos
+     - ME_CONFIG_MONGODB_PORT=27017 #Puerto expuesto
     ports:
       - "8081:8081"
     networks:
